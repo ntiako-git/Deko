@@ -1,0 +1,34 @@
+<script setup lang="ts">
+import type { Prisma } from '~~/prisma/generated/client';
+
+type ProductWithDeco = Prisma.ProductGetPayload<{
+	include: { avatarDecoration: true }
+}>;
+
+defineProps<{
+	product: ProductWithDeco
+}>();
+</script>
+
+<template>
+	<div class="flex flex-col bg-[#1c1d21] rounded-xl overflow-hidden hover:bg-[#232428] transition-colors cursor-pointer p-4 group">
+		<!-- Image Preview -->
+		<div class="flex-1 flex items-center justify-center min-h-40 mb-4">
+			<img
+				v-if="product.avatarDecoration?.asset"
+				:src="`https://cdn.discordapp.com/avatar-decoration-presets/${product.avatarDecoration.asset}.png`"
+				:alt="product.name"
+				class="w-32 h-32 object-contain group-hover:scale-105 transition-transform duration-300"
+			/>
+		</div>
+
+		<!-- Infos -->
+		<div class="flex flex-col gap-1">
+			<h3 class="text-white font-semibold text-sm truncate" :title="product.name">
+				{{ product.name }}
+			</h3>
+			<!-- Le prix n'est pas dans le schéma Prisma actuel, on mock à 5.99€ comme sur la maquette -->
+			<span class="text-gray-400 text-xs font-medium">x€</span>
+		</div>
+	</div>
+</template>

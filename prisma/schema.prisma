@@ -1,0 +1,271 @@
+generator client {
+    provider = "prisma-client"
+    output   = "./generated"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+/// Correspond au champ `type` de Discord :
+/// 0 AVATAR_DECORATION, 1 PROFILE_EFFECT, 2 NAMEPLATE, 3 PROFILE_FRAME,
+/// 1000 BUNDLE, 2000 VARIANTS_GROUP, 3000 EXTERNAL_SKU
+/// (Prisma ne permet pas d'enum numérique : le mapping se fait dans le script de sync)
+enum CollectibleType {
+    AVATAR_DECORATION
+    PROFILE_EFFECT
+    NAMEPLATE
+    PROFILE_FRAME
+    BUNDLE
+    VARIANTS_GROUP
+    EXTERNAL_SKU
+}
+
+/// 0 UNSPECIFIED, 1 PERSISTENT, 2 INTERMITTENT
+enum EffectAnimationType {
+    UNSPECIFIED
+    PERSISTENT
+    INTERMITTENT
+}
+
+enum NameplatePalette {
+    NONE       @map("none")
+    CRIMSON    @map("crimson")
+    BERRY      @map("berry")
+    SKY        @map("sky")
+    TEAL       @map("teal")
+    FOREST     @map("forest")
+    BUBBLE_GUM @map("bubble_gum")
+    VIOLET     @map("violet")
+    COBALT     @map("cobalt")
+    CLOVER     @map("clover")
+    LEMON      @map("lemon")
+    WHITE      @map("white")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Catégories (= collections : "Halloween", etc.)
+// Source : GET /collectibles-categories/v2
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+    id              String  @id // category sku_id (snowflake, stocké en String pour éviter les BigInt côté JS)
+    storeListingId  String
+    name            String
+    summary         String
+    mobileSummary   String?
+    bannerTextColor String?
+
+    logoUrl         String
+    heroLogoUrl     String?
+    pdpBgUrl        String
+    mobileBannerUrl String?
+    mobileBgUrl     String?
+
+    backgroundColors Int[]
+    buttonColors     Int[]
+    confettiColors   Int[]
+
+    /// Classement de popularité des SKU de la catégorie
+    heroRanking String[]
+
+    unpublishedAt DateTime?
+
+    products Product[]
+
+    /// JSON brut renvoyé par Discord (filet de sécurité si le format évolue)
+    raw      Json?
+    syncedAt DateTime @default(now()) @updatedAt
+
+    @@index([name])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Produits (SKU)
+// Source : GET /collectibles-products/{sku_id}
+//
+// Un Product est soit un item seul (type 0..3), soit un bundle (1000).
+// Pour un item seul : Product.id == sku_id de l'item, et la table de détail
+// correspondante (AvatarDecoration, ProfileEffect...) a le même id.
+// Pour un bundle : les `bundled_products` deviennent des Product liés via BundleItem.
+// ─────────────────────────────────────────────────────────────
+
+model Product {
+    id             String          @id // sku_id
+    storeListingId String?
+    type           CollectibleType
+    name           String
+    /// Peut valoir "{joinedItems}" pour les bundles : à reconstruire côté code
+    summary        String?
+    premiumType    Int             @default(0)
+    unpublishedAt  DateTime?
+
+    categoryId String?
+    category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+    // styles
+    backgroundColors Int[]
+    buttonColors     Int[]
+    confettiColors   Int[]
+
+    // preview_assets (surtout présents sur les bundles)
+    previewFgStatic   String?
+    previewFgAnimated String?
+    previewBgStatic   String?
+    previewBgAnimated String?
+
+    // Détails selon le type (une seule relation sera remplie)
+    avatarDecoration AvatarDecoration?
+    profileEffect    ProfileEffect?
+    nameplate        Nameplate?
+    profileFrame     ProfileFrame?
+
+    // Composition des bundles
+    bundleItems BundleItem[] @relation("BundleToItems")
+    includedIn  BundleItem[] @relation("ItemToBundles")
+
+    raw       Json?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([categoryId])
+    @@index([type])
+    @@index([name])
+}
+
+model BundleItem {
+    bundleId String
+    itemId   String
+    /// Ordre d'affichage dans le bundle
+    position Int    @default(0)
+
+    bundle Product @relation("BundleToItems", fields: [bundleId], references: [id], onDelete: Cascade)
+    item   Product @relation("ItemToBundles", fields: [itemId], references: [id], onDelete: Cascade)
+
+    @@id([bundleId, itemId])
+    @@index([itemId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Type 0 : décoration d'avatar
+// URL à reconstruire depuis `asset` (voir docs.discord.food/reference#cdn-formatting)
+// ─────────────────────────────────────────────────────────────
+
+model AvatarDecoration {
+    skuId    String  @id
+    /// Hash de l'asset, ex: "a_f2cea6597b77a277ff458099d051ba62"
+    asset    String
+    /// true si le hash commence par "a_"
+    animated Boolean @default(false)
+    label    String?
+
+    product Product @relation(fields: [skuId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Type 1 : effet de profil
+// ─────────────────────────────────────────────────────────────
+
+model ProfileEffect {
+    skuId               String              @id
+    title               String
+    description         String
+    accessibilityLabel  String
+    animationType       EffectAnimationType @default(UNSPECIFIED)
+    /// APNG
+    thumbnailPreviewSrc String
+    /// APNG pour prefers-reduced-motion
+    reducedMotionSrc    String
+    /// PNG
+    staticFrameSrc      String?
+
+    layers ProfileEffectLayer[]
+
+    product Product @relation(fields: [skuId], references: [id], onDelete: Cascade)
+}
+
+model ProfileEffectLayer {
+    id       Int    @id @default(autoincrement())
+    effectId String
+    /// Position dans le tableau `effects` d'origine
+    position Int
+
+    /// URL complète (APNG) : ces URLs sont directement utilisables
+    src       String
+    loop      Boolean @default(false)
+    /// ms
+    duration  Int
+    /// ms
+    start     Int     @default(0)
+    /// ms
+    loopDelay Int     @default(0)
+    zIndex    Int     @default(0)
+
+    // Absents des exemples mais présents dans la doc
+    width  Int?
+    height Int?
+    posX   Int?
+    posY   Int?
+
+    /// Variantes tirées au hasard (liste d'URLs) ; vide si aucune
+    randomizedSources String[]
+
+    effect ProfileEffect @relation(fields: [effectId], references: [skuId], onDelete: Cascade)
+
+    @@unique([effectId, position])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Type 2 : nameplate
+// ─────────────────────────────────────────────────────────────
+
+model Nameplate {
+    skuId   String           @id
+    /// Chemin du dossier, ex: "nameplates/night_flight/1551708828741931039/"
+    asset   String
+    palette NameplatePalette @default(NONE)
+    label   String
+
+    product Product @relation(fields: [skuId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Type 3 : cadre de profil
+// ─────────────────────────────────────────────────────────────
+
+model ProfileFrame {
+    skuId              String  @id
+    label              String?
+    innerWidth         Int
+    overflowTop        Int
+    overflowBottom     Int
+    overflowHorizontal Int
+
+    layers ProfileFrameLayer[]
+
+    product Product @relation(fields: [skuId], references: [id], onDelete: Cascade)
+}
+
+model ProfileFrameLayer {
+    id       Int    @id @default(autoincrement())
+    frameId  String
+    position Int
+
+    /// `id` d'origine : snowflake de l'asset de la couche
+    assetId    String
+    /// Données réelles : "staple" (la doc dit integer, mais l'API renvoie une string)
+    type       String
+    /// "front" | "back"
+    order      String
+    /// "top" | "bottom"
+    anchor     String
+    responsive Boolean @default(false)
+
+    frame ProfileFrame @relation(fields: [frameId], references: [skuId], onDelete: Cascade)
+
+    @@unique([frameId, position])
+}
