@@ -32,21 +32,6 @@ enum EffectAnimationType {
     INTERMITTENT
 }
 
-enum NameplatePalette {
-    NONE       @map("none")
-    CRIMSON    @map("crimson")
-    BERRY      @map("berry")
-    SKY        @map("sky")
-    TEAL       @map("teal")
-    FOREST     @map("forest")
-    BUBBLE_GUM @map("bubble_gum")
-    VIOLET     @map("violet")
-    COBALT     @map("cobalt")
-    CLOVER     @map("clover")
-    LEMON      @map("lemon")
-    WHITE      @map("white")
-}
-
 // ─────────────────────────────────────────────────────────────
 // Catégories (= collections : "Halloween", etc.)
 // Source : GET /collectibles-categories/v2
@@ -60,11 +45,13 @@ model Category {
     mobileSummary   String?
     bannerTextColor String?
 
-    logoUrl         String
-    heroLogoUrl     String?
-    pdpBgUrl        String
-    mobileBannerUrl String?
-    mobileBgUrl     String?
+    logoUrl          String?
+    heroLogoUrl      String?
+    pdpBgUrl         String?
+    mobileBannerUrl  String?
+    mobileBgUrl      String?
+    heroBannerUrl    String?
+    catalogBannerUrl String?
 
     backgroundColors Int[]
     buttonColors     Int[]
@@ -173,8 +160,8 @@ model AvatarDecoration {
 model ProfileEffect {
     skuId               String              @id
     title               String
-    description         String
-    accessibilityLabel  String
+    description         String?
+    accessibilityLabel  String?
     animationType       EffectAnimationType @default(UNSPECIFIED)
     /// APNG
     thumbnailPreviewSrc String
@@ -224,11 +211,11 @@ model ProfileEffectLayer {
 // ─────────────────────────────────────────────────────────────
 
 model Nameplate {
-    skuId   String           @id
+    skuId   String  @id
     /// Chemin du dossier, ex: "nameplates/night_flight/1551708828741931039/"
     asset   String
-    palette NameplatePalette @default(NONE)
-    label   String
+    palette String  @default("none")
+    label   String?
 
     product Product @relation(fields: [skuId], references: [id], onDelete: Cascade)
 }
