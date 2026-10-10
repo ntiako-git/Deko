@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import type { Prisma } from '~~/prisma/generated/client';
+import type { DecorationProduct } from "#server/api/catalog/decorations.get.ts";
 
-type ProductWithDeco = Prisma.ProductGetPayload<{
-	include: { avatarDecoration: true }
-}>;
-
-defineProps<{
-	product: ProductWithDeco
+const props = defineProps<{
+	product: DecorationProduct
 }>();
 </script>
 
