@@ -89,6 +89,8 @@ model Product {
     /// Peut valoir "{joinedItems}" pour les bundles : à reconstruire côté code
     summary        String?
     premiumType    Int             @default(0)
+    priceEur       Int?
+    priceOrbs      Int?
     unpublishedAt  DateTime?
 
     categoryId String?
