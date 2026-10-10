@@ -5,5 +5,7 @@
 		<AppHeader />
 
 		<slot />
+
+		<MobileNav />
 	</div>
 </template>
