@@ -40,8 +40,7 @@ const price = computed(() => {
 			<h3 class="text-white font-semibold text-sm truncate" :title="product.name">
 				{{ product.name }}
 			</h3>
-			<!-- Le prix n'est pas dans le schéma Prisma actuel, on mock à 5.99€ comme sur la maquette -->
-			<span class="text-gray-400 text-xs font-medium">x€</span>
+			<span class="text-gray-400 text-xs font-medium">{{ price }}</span>
 		</div>
 	</div>
 </template>

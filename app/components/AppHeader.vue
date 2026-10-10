@@ -46,7 +46,7 @@ const navLinks = [
 	>
 		<div
 			class="max-w-6xl mx-auto flex justify-between items-center border transition-all duration-300"
-			:class="isScrolled ? 'bg-[#111214]/90 backdrop-blur-lg px-6 py-3 rounded-2xl border-[#5865F2]/30' : 'bg-transparent border-transparent'"
+			:class="isScrolled ? 'bg-[#111214]/90 backdrop-blur-lg px-6 py-3 rounded-2xl border-accent/30' : 'bg-transparent border-transparent'"
 		>
 			<!-- Logo -->
 			<NuxtLink to="/" class="text-heading tracking-wide">Deko</NuxtLink>
@@ -66,7 +66,7 @@ const navLinks = [
 			</nav>
 
 			<!-- CTA -->
-			<button class="discord-btn bg-[#5865F2] hover:bg-[#4752C4] text-white px-4 py-2.5 rounded-md font-medium text-sm flex items-center gap-2 transition-colors cursor-pointer shadow-md">
+			<button class="discord-btn bg-accent hover:bg-accent/80 text-white px-4 py-2.5 rounded-md font-medium text-sm flex items-center gap-2 transition-[colors,transform] cursor-pointer shadow-md">
 				<Icon name="simple-icons:discord" class="discord-icon w-5! h-5!" />
 				<span class="hidden sm:inline">Connexion Discord</span>
 				<span class="sm:hidden">Connexion</span>
