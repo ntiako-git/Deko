@@ -1,9 +1,19 @@
 @import "tailwindcss";
 
+@layer base {
+    body {
+        @apply bg-[#111214] text-gray-200 font-sans antialiased overflow-x-hidden;
+    }
+
+    button, a, input, select, textarea {
+        outline: none !important;
+    }
+}
+
 @layer components {
     /* Layout global */
     .page-container {
-        @apply max-w-6xl mx-auto px-6 w-full;
+        @apply w-full max-w-6xl mx-auto px-4 sm:px-6 pb-28 md:pb-12;
     }
 
     /* Panneaux (Cartes, Barres de recherche, etc.) */
@@ -30,6 +40,17 @@
     }
 }
 
-body {
-    @apply bg-[#111214] text-gray-200 font-sans antialiased;
+@keyframes discord-wiggle {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-12deg) scale(1.1); }
+    75% { transform: rotate(12deg) scale(1.1); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+.discord-btn:hover .discord-icon {
+    animation: discord-wiggle 0.4s ease-in-out forwards;
+}
+
+.discord-btn:active {
+    transform: scale(0.96);
 }
