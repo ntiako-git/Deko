@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import type { DecorationProduct } from "#server/api/catalog/decorations.get.ts";
+import { computed } from 'vue';
+import type { CategoryWithCollectibles } from '~~/server/api/catalog/collectibles.get';
+
+type ProductItem = CategoryWithCollectibles['products'][number];
 
 const props = defineProps<{
-	product: DecorationProduct
+	product: ProductItem
 }>();
 
 const price = computed(() => {
@@ -25,14 +28,68 @@ const price = computed(() => {
 
 <template>
 	<div class="flex flex-col bg-[#1c1d21] rounded-xl overflow-hidden hover:bg-[#232428] transition-colors cursor-pointer p-4 group">
-		<!-- Image Preview -->
-		<div class="flex-1 flex items-center justify-center min-h-40 mb-4">
+		<!-- Image Preview selon le type -->
+		<div class="flex-1 flex items-center justify-center mb-4" :class="product.profileFrame ? 'min-h-70' : 'min-h-40'">
+			<!-- Décorations d'avatar -->
 			<img
 				v-if="product.avatarDecoration?.asset"
 				:src="`https://cdn.discordapp.com/avatar-decoration-presets/${product.avatarDecoration.asset}.png`"
 				:alt="product.name"
 				class="w-32 h-32 object-contain group-hover:scale-105 transition-transform duration-300"
 			/>
+
+			<!-- Effet de profil -->
+			<img
+				v-else-if="product.profileEffect?.thumbnailPreviewSrc"
+				:src="product.profileEffect.thumbnailPreviewSrc"
+				:alt="product.name"
+				class="w-32 h-full object-contain group-hover:scale-105 transition-transform duration-300"
+			/>
+
+			<!-- Plaque nominative -->
+			<template v-else-if="product.nameplate?.asset">
+				<video
+					v-if="product.nameplate.asset === 'nameplates/buffering.../1541529803809755246/'"
+					src="/assets/videos/buffering"
+					autoplay
+					loop
+					muted
+					playsinline
+					class="w-32 h-32 object-contain group-hover:scale-105 transition-transform duration-300"
+				/>
+				<img
+					@click="console.log(product.nameplate.asset)"
+					v-else
+					:src="`https://cdn.discordapp.com/assets/collectibles/${product.nameplate.asset}static.png`"
+					:alt="product.name"
+					class="w-32 h-32 object-contain group-hover:scale-105 transition-transform duration-300"
+				/>
+			</template>
+
+			<!-- Cadre de profil -->
+			<div v-else-if="product.profileFrame" class="frame-preview-container group-hover:scale-105 transition-transform duration-300">
+				<img
+					v-for="layer in product.profileFrame.layers"
+					:key="layer.assetId"
+					:src="`https://cdn.discordapp.com/media/v1/collectibles-shop/${product.profileFrame.skuId}/${layer.assetId}/static`"
+					class="frame-layer"
+					:class="[
+						layer.order === 'back' ? 'frame-layer-back' : 'frame-layer-front',
+						layer.anchor === 'top' ? 'frame-anchor-top' : '',
+						layer.anchor === 'bottom' ? 'frame-anchor-bottom' : '',
+						layer.anchor === 'center' ? 'frame-anchor-center' : ''
+					]"
+					alt=""
+					loading="lazy"
+					decoding="async"
+					draggable="false"
+				/>
+			</div>
+
+			<!-- Fallback par défaut -->
+			<div v-else class="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
+				<Icon name="lucide:image" class="w-8 h-8 text-gray-500" />
+			</div>
 		</div>
 
 		<!-- Infos -->

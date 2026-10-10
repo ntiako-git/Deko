@@ -42,6 +42,34 @@
     .transition-base {
         @apply transition-all duration-300 ease-in-out;
     }
+
+    .frame-preview-container {
+        @apply relative w-32 h-full flex items-center justify-center overflow-hidden;
+    }
+
+    .frame-layer {
+        @apply absolute inset-x-0 w-full pointer-events-none object-contain;
+    }
+
+    .frame-layer-back {
+        @apply z-0;
+    }
+
+    .frame-layer-front {
+        @apply z-20;
+    }
+
+    .frame-anchor-top {
+        @apply top-0;
+    }
+
+    .frame-anchor-bottom {
+        @apply bottom-0;
+    }
+
+    .frame-anchor-center {
+        @apply top-1/2 -translate-y-1/2;
+    }
 }
 
 @keyframes discord-wiggle {
