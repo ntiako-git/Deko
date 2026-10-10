@@ -4,6 +4,23 @@ import type { DecorationProduct } from "#server/api/catalog/decorations.get.ts";
 const props = defineProps<{
 	product: DecorationProduct
 }>();
+
+const price = computed(() => {
+	const internationalNumberFormat = new Intl.NumberFormat('fr-FR', {
+		style: 'currency',
+		currency: 'EUR'
+	});
+
+	const prices = [];
+
+	if (props.product.priceEur != null)
+		prices.push(internationalNumberFormat.format(props.product.priceEur / 100));
+
+	if (props.product.priceOrbs != null)
+		prices.push(`${props.product.priceOrbs} orbs`);
+
+	return prices.length > 0 ? prices.join(' · ') : '???';
+});
 </script>
 
 <template>
