@@ -37,6 +37,7 @@ export type CategoryWithCollectibles = Prisma.CategoryGetPayload<{
 				id: true;
 				name: true;
 				priceEur: true;
+				priceEurNitro: true,
 				priceOrbs: true;
 				type: true;
 				avatarDecoration: { select: { asset: true; animated: true } };
@@ -68,6 +69,7 @@ export default defineEventHandler(async (event): Promise<CategoryWithCollectible
 		id: true,
 		name: true,
 		priceEur: true,
+		priceEurNitro: true,
 		priceOrbs: true,
 		type: true,
 		avatarDecoration: { select: { asset: true, animated: true } },

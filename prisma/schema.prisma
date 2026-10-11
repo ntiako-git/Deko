@@ -90,6 +90,7 @@ model Product {
     summary        String?
     premiumType    Int             @default(0)
     priceEur       Int?
+    priceEurNitro  Int?
     priceOrbs      Int?
     unpublishedAt  DateTime?
 
