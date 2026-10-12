@@ -75,7 +75,6 @@ const price = computed(() => {
 					class="w-32 h-32 object-contain group-hover:scale-105 transition-transform duration-300"
 				/>
 				<img
-					@click="console.log(product.nameplate.asset)"
 					v-else
 					:src="`https://cdn.discordapp.com/assets/collectibles/${product.nameplate.asset}static.png`"
 					:alt="product.name"
