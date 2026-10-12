@@ -102,6 +102,13 @@ const price = computed(() => {
 				/>
 			</div>
 
+			<img
+				v-else-if="product.type === 'BUNDLE' && product.previewFgStatic"
+				:src="product.previewFgStatic"
+				:alt="product.name"
+				class="w-32 h-full object-contain group-hover:scale-105 transition-transform duration-300"
+			/>
+
 			<!-- Fallback par défaut -->
 			<div v-else class="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
 				<Icon name="lucide:image" class="w-8 h-8 text-gray-500" />
