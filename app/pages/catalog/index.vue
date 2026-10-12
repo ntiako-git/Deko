@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { CategoryWithCollectibles } from '~~/server/api/catalog/collectibles.get';
+import { type CategoryWithCollectibles } from '#shared/catalog.ts';
 import NavigationMobile from '~/components/catalog/NavigationMobile.vue';
 import NavigationDesktop from '~/components/catalog/NavigationDesktop.vue';
 import CatalogFilterBar from '~/components/catalog/FilterBar.vue';
 import CatalogSkeleton from '~/components/ui/CatalogSkeleton.vue';
-import CatalogError from '~/components/catalog/CatalogError.vue';
 import CatalogEmpty from '~/components/catalog/CatalogEmpty.vue';
 import CatalogCategorySection from '~/components/catalog/CategorySection.vue';
 import CatalogPagination from '~/components/catalog/Pagination.vue';
+import Error from "~/components/ui/Error.vue";
 
 const { activeTab } = useCatalogNavigation();
 
@@ -99,7 +99,14 @@ const handleResetFilters = () => {
 
 		<!-- États asynchrones -->
 		<CatalogSkeleton v-if="pending" />
-		<CatalogError v-else-if="error" :on-retry="refresh" />
+		<Error
+			v-else-if="error"
+			title="Impossible de charger le catalogue"
+			description="Une erreur est survenue lors de la récupération des collections depuis le serveur."
+			btnLabel="Réessayer"
+			btnIcon="lucide:rotate-cw"
+			:action="refresh"
+		/>
 
 		<template v-else>
 			<CatalogEmpty

@@ -1,5 +1,7 @@
 import { prisma } from "#server/utils/db";
-import { Prisma, CollectibleType } from "~~/prisma/generated/client";
+import { CollectibleType } from "~~/prisma/generated/client";
+import { type CategoryWithCollectibles } from "#shared/catalog";
+import { categorySelect, productSelect } from "#server/utils/catalog-select.ts";
 
 const typeMapping: Record<string, CollectibleType> = {
 	decorations: CollectibleType.AVATAR_DECORATION,
@@ -8,87 +10,10 @@ const typeMapping: Record<string, CollectibleType> = {
 	frames: CollectibleType.PROFILE_FRAME,
 };
 
-const categorySelect = {
-	id: true,
-	storeListingId: true,
-	name: true,
-	summary: true,
-	mobileSummary: true,
-	bannerTextColor: true,
-	logoUrl: true,
-	heroLogoUrl: true,
-	pdpBgUrl: true,
-	mobileBannerUrl: true,
-	mobileBgUrl: true,
-	heroBannerUrl: true,
-	catalogBannerUrl: true,
-	backgroundColors: true,
-	buttonColors: true,
-	confettiColors: true,
-	heroRanking: true,
-	unpublishedAt: true,
-	syncedAt: true,
-} satisfies Prisma.CategorySelect;
-
-export type CategoryWithCollectibles = Prisma.CategoryGetPayload<{
-	select: typeof categorySelect & {
-		products: {
-			select: {
-				id: true;
-				name: true;
-				priceEur: true;
-				priceEurNitro: true,
-				priceOrbs: true;
-				type: true;
-				avatarDecoration: { select: { asset: true; animated: true } };
-				profileEffect: { select: { thumbnailPreviewSrc: true; } };
-				nameplate: { select: { asset: true; } };
-				profileFrame: {
-					select: {
-						skuId: true;
-						layers: {
-							select: {
-								assetId: true;
-								order: true;
-								anchor: true;
-							};
-						};
-					}
-				};
-			}
-		}
-	}
-}>;
-
 export default defineEventHandler(async (event): Promise<CategoryWithCollectibles[]> => {
 	const query = getQuery(event);
 	const typeParam = (query.type as string) || 'decorations';
 	const collectibleType = typeMapping[typeParam] || CollectibleType.AVATAR_DECORATION;
-
-	const productSelect = {
-		id: true,
-		name: true,
-		priceEur: true,
-		priceEurNitro: true,
-		priceOrbs: true,
-		type: true,
-		avatarDecoration: { select: { asset: true, animated: true } },
-		profileEffect: { select: { thumbnailPreviewSrc: true, } },
-		nameplate: { select: { asset: true } },
-		profileFrame: {
-			select: {
-				skuId: true,
-				layers: {
-					where: { type: { not: 'rail' } },
-					select: {
-						assetId: true,
-						order: true,
-						anchor: true,
-					},
-				},
-			},
-		},
-	} satisfies Prisma.ProductSelect;
 
 	const categories = await prisma.category.findMany({
 		where: {

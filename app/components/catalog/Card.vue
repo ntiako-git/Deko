@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { CategoryWithCollectibles } from '~~/server/api/catalog/collectibles.get';
+import type { CategoryWithCollectibles } from "#shared/catalog.ts";
 
 type ProductItem = CategoryWithCollectibles['products'][number];
 
