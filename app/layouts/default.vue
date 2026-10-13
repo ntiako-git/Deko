@@ -4,6 +4,7 @@
 	<div class="page-container min-h-screen">
 		<AppHeader />
 
+		<OnboardingModal />
 		<slot />
 
 		<MobileNav />

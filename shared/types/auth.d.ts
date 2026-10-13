@@ -5,6 +5,7 @@ declare module '#auth-utils' {
 		avatar: string | null;
 		locale: string;
 		nitro: boolean;
+		onboarded: boolean;
 	}
 }
 

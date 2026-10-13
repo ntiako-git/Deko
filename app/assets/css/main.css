@@ -43,6 +43,12 @@
         @apply transition-all duration-300 ease-in-out;
     }
 
+    /* TODO */
+    .preview-stage {
+        @apply relative flex items-center justify-center overflow-hidden rounded-lg bg-[#2b2d31] ring-1 ring-inset ring-white/5;
+        background-image: radial-gradient(ellipse at 50% 35%, rgba(255, 255, 255, 0.10), transparent 70%);
+    }
+
     .frame-preview-container {
         @apply relative w-32 h-full flex items-center justify-center overflow-hidden;
     }

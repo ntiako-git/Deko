@@ -259,3 +259,30 @@ model ProfileFrameLayer {
 
     @@unique([frameId, position])
 }
+
+model User {
+    id         String  @id
+    username   String
+    globalName String?
+    avatar     String?
+    locale     String?
+    nitro      Boolean @default(false)
+
+    /// Données renvoyées par Discord à chaque connexion (écrasées à chaque fois)
+    avatarDecorationSkuId String?
+    avatarDecorationAsset String?
+    nameplateSkuId        String?
+    nameplateAsset        String?
+    nameplateLabel        String?
+    nameplatePalette      String?
+
+    /// Renseignés par l'utilisateur : Product.id == sku_id
+    profileEffectSkuId String?
+    profileFrameSkuId  String?
+
+    /// Date de fin (ou d'abandon) du guide de première connexion
+    onboardedAt DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
