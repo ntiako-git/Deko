@@ -1,5 +1,5 @@
 import { prisma } from "#server/utils/db";
-import { CollectibleType } from "~~/prisma/generated/client";
+import { CollectibleType } from "~~/prisma/generated/client.ts";
 import { type CategoryWithCollectibles } from "#shared/catalog";
 import { categorySelect, productSelect } from "#server/utils/catalog-select.ts";
 
