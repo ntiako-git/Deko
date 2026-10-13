@@ -17,7 +17,7 @@
 @layer components {
     /* Layout global */
     .page-container {
-        @apply w-full max-w-6xl mx-auto px-4 sm:px-6 pb-28 md:pb-12;
+        @apply w-full max-w-10/12 mx-auto px-4 sm:px-6 pb-28 md:pb-12;
     }
 
     /* Panneaux (Cartes, Barres de recherche, etc.) */
