@@ -79,6 +79,14 @@
 }
 
 /* Scrollbars */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #5865F2 transparent;
