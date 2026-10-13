@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 
 const { loggedIn, user, clear } = useUserSession();
+const route = useRoute();
 
 const isScrolled = ref(false);
 const isVisible = ref(true);
@@ -39,7 +40,7 @@ const navLinks = [
 	{ name: 'Catalogue', path: '/catalog', icon: 'lucide:newspaper' },
 	{ name: 'Éditeur', path: '/editor', icon: 'lucide:wand-sparkles' },
 	{ name: 'Galerie', path: '/gallery', icon: 'lucide:image' },
-	{ name: 'Comparer', path: '/compare', icon: 'lucide:git-compare' },
+	{ name: 'Comparer', path: '/compare', icon: 'lucide:columns-2' },
 ];
 
 onMounted(() => {
@@ -74,10 +75,10 @@ onUnmounted(() => {
 					v-for="link in navLinks"
 					:key="link.path"
 					:to="link.path"
-					class="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-colors py-2.5 px-3 rounded-lg hover:bg-[#232428]"
-					active-class="text-white bg-[#232428]"
+					class="group flex items-center gap-2 text-sm font-medium text-gray-400 py-2.5 px-3 border border-transparent hover:text-white transition-colors"
+					active-class="text-white border-b-accent"
 				>
-					<Icon :name="link.icon" class="w-5! h-5!" />
+					<Icon :name="link.icon" class="w-5! h-5! group-hover:text-white transition-colors" :class="route.path === link.path ? 'text-accent!' : 'text-gray-400'" />
 					{{ link.name }}
 				</NuxtLink>
 			</nav>
@@ -86,21 +87,21 @@ onUnmounted(() => {
 			<div v-if="loggedIn && user" class="relative" ref="menuRef">
 				<button
 					@click="isMenuOpen = !isMenuOpen"
-					class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-transparent hover:bg-[#232428] transition-colors cursor-pointer"
+					class="flex items-center gap-3 md:px-4 md:py-2.5 rounded-xl bg-transparent hover:bg-[#232428] transition-colors cursor-pointer"
 				>
 					<img
 						v-if="user.avatar"
 						:src="`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`"
 						:alt="`${user.username}'s avatar`"
-						class="w-5 h-5 rounded-full object-cover ring-2 ring-accent/40"
+						class="w-8! h-8! rounded-full object-cover"
 					/>
-					<div v-else class="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm">
+					<div v-else class="w-8! h-8! rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-sm">
 						{{ user.username?.charAt(0).toUpperCase() }}
 					</div>
-					<span class="text-white font-semibold text-sm tracking-wide">{{ user.username }}</span>
+					<span class="hidden md:block text-white font-semibold text-sm tracking-wide">{{ user.username }}</span>
 					<Icon
 						name="lucide:chevron-down"
-						class="w-4! h-4! text-gray-400 transition-transform duration-200"
+						class="hidden! md:block! w-4! h-4! text-gray-400 transition-transform duration-200"
 						:class="{ 'rotate-180': isMenuOpen }"
 					/>
 				</button>
