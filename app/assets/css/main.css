@@ -72,6 +72,22 @@
     }
 }
 
+/* Scrollbars */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #5865F2 transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #5865F2;
+    border-radius: 20px;
+}
+
 @keyframes discord-wiggle {
     0% { transform: rotate(0deg) scale(1); }
     25% { transform: rotate(-12deg) scale(1.1); }

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { type CategoryWithCollectibles } from '#shared/catalog.ts';
-import NavigationMobile from '~/components/catalog/NavigationMobile.vue';
-import NavigationDesktop from '~/components/catalog/NavigationDesktop.vue';
-import CatalogFilterBar from '~/components/catalog/FilterBar.vue';
+import { normalizeText } from '~/utils/text';
+import CatalogSidebar from '~/components/catalog/Sidebar.vue';
 import CatalogSkeleton from '~/components/ui/CatalogSkeleton.vue';
 import CatalogEmpty from '~/components/catalog/CatalogEmpty.vue';
 import CatalogCategorySection from '~/components/catalog/CategorySection.vue';
@@ -13,131 +12,147 @@ import Error from "~/components/ui/Error.vue";
 const { activeTab } = useCatalogNavigation();
 
 // TODO Charger 2 pages de catégories au lieu de tout charger d'un coup
-const { data: categories, pending, error, refresh } = await useFetch<CategoryWithCollectibles[]>('/api/catalog/collectibles', { query: { type: activeTab} });
+const { data: categories, pending, error, refresh } = await useFetch<CategoryWithCollectibles[]>('/api/catalog/collectibles', { query: { type: activeTab } });
 
-const selectedCategoryId = ref('');
+const selectedCategoryIds = ref<string[]>([]);
 const searchQuery = ref('');
 const currentPage = ref(1);
 const ITEMS_PER_PAGE = 5;
 
 watch(activeTab, () => {
-	selectedCategoryId.value = '';
+	selectedCategoryIds.value = [];
 	searchQuery.value = '';
 	currentPage.value = 1;
 });
 
-watch([selectedCategoryId, searchQuery], () => {
+watch([selectedCategoryIds, searchQuery], () => {
 	currentPage.value = 1;
 });
 
+const query = computed(() => normalizeText(searchQuery.value.trim()));
+
+const matchingProducts = (cat: CategoryWithCollectibles) =>
+	query.value
+		? cat.products.filter(p => normalizeText(p.name).includes(query.value))
+		: cat.products;
+
+const allCategories = computed(() => (pending.value ? [] : categories.value ?? []));
+
 const filteredCategories = computed(() => {
-	if (!categories.value) return [];
+	let result = allCategories.value;
 
-	let result = categories.value;
+	if (selectedCategoryIds.value.length)
+		result = result.filter(cat => selectedCategoryIds.value.includes(cat.id));
 
-	if (selectedCategoryId.value)
-		result = result.filter(cat => cat.id === selectedCategoryId.value);
-
-	if (searchQuery.value) {
-		const rawQuery = searchQuery.value.trim().toLowerCase();
-
-		const categoryPrefix = "categorie:";
-
-		if (rawQuery.startsWith(categoryPrefix)) {
-			const searchCatTerm = rawQuery.slice(categoryPrefix.length).trim();
-			if (searchCatTerm)
-				result = result.filter(cat => cat.name.toLowerCase().includes(searchCatTerm));
-		} else {
-			result = result.map(cat => {
-				return {
-					...cat,
-					products: cat.products.filter(p => p.name.toLowerCase().includes(rawQuery))
-				};
-			}).filter(cat => cat.products.length > 0);
-		}
-	}
+	if (query.value)
+		result = result
+			.map(cat => ({ ...cat, products: matchingProducts(cat) }))
+			.filter(cat => cat.products.length > 0);
 
 	return result;
 });
 
-const totalPages = computed(() => {
-	return Math.ceil(filteredCategories.value.length / ITEMS_PER_PAGE);
-});
+const pickerOptions = computed(() =>
+	allCategories.value.map(c => ({ id: c.id, name: c.name, count: matchingProducts(c).length }))
+);
+
+const totalCount = computed(() => allCategories.value.reduce((sum, c) => sum + c.products.length, 0));
+const resultCount = computed(() => filteredCategories.value.reduce((sum, c) => sum + c.products.length, 0));
+
+const selectedChips = computed(() =>
+	pickerOptions.value.filter(o => selectedCategoryIds.value.includes(o.id))
+);
+
+const totalPages = computed(() => Math.ceil(filteredCategories.value.length / ITEMS_PER_PAGE));
 
 const paginatedCategories = computed(() => {
 	const start = (currentPage.value - 1) * ITEMS_PER_PAGE;
-	const end = start + ITEMS_PER_PAGE;
-	return filteredCategories.value.slice(start, end);
+	return filteredCategories.value.slice(start, start + ITEMS_PER_PAGE);
 });
 
 const handlePageChange = () => {
-	window.scrollTo({
-		top: 0,
-		behavior: 'smooth'
-	});
+	window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const removeCategory = (id: string) => {
+	selectedCategoryIds.value = selectedCategoryIds.value.filter(x => x !== id);
 };
 
 const handleResetFilters = () => {
-	selectedCategoryId.value = '';
+	selectedCategoryIds.value = [];
 	searchQuery.value = '';
 	currentPage.value = 1;
 };
 </script>
 
 <template>
-	<div class="flex flex-col pb-12">
-		<NavigationMobile />
-
-		<CatalogFilterBar
-			v-if="categories"
-			:categories="categories.map(c => ({ id: c.id, name: c.name }))"
-			v-model:selected-category="selectedCategoryId"
+	<div class="pt-6 lg:pt-8 flex flex-col gap-6 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
+		<CatalogSidebar
+			v-model:selected-categories="selectedCategoryIds"
 			v-model:search-query="searchQuery"
+			:categories="pickerOptions"
+			:loading="pending"
+			:total-count="totalCount"
+			:result-count="resultCount"
 		/>
 
-		<NavigationDesktop />
+		<main class="min-w-0 flex flex-col gap-6">
+			<!-- Collections sélectionnées (Mobile) -->
+			<div v-if="selectedChips.length" class="flex flex-wrap items-center gap-2 lg:hidden">
+				<button
+					v-for="chip in selectedChips"
+					:key="chip.id"
+					type="button"
+					@click="removeCategory(chip.id)"
+					:aria-label="`Retirer la collection ${chip.name}`"
+					class="flex items-center gap-1.5 h-8 pl-3 pr-2 rounded-lg bg-accent/15 text-accent text-xs font-medium"
+				>
+					{{ chip.name }}
+					<Icon name="lucide:x" class="w-3.5! h-3.5!" />
+				</button>
+				<button
+					type="button"
+					@click="selectedCategoryIds = []"
+					class="px-1 text-xs font-medium text-gray-400 active:text-white transition-colors"
+				>
+					Tout effacer
+				</button>
+			</div>
 
-		<!-- États asynchrones -->
-		<CatalogSkeleton v-if="pending" />
-		<Error
-			v-else-if="error"
-			title="Impossible de charger le catalogue"
-			description="Une erreur est survenue lors de la récupération des collections depuis le serveur."
-			btnLabel="Réessayer"
-			btnIcon="lucide:rotate-cw"
-			:action="refresh"
-		/>
-
-		<template v-else>
-			<CatalogEmpty
-				v-if="filteredCategories.length === 0"
-				:on-reset="handleResetFilters"
+			<!-- États asynchrones -->
+			<CatalogSkeleton v-if="pending" />
+			<Error
+				v-else-if="error"
+				title="Impossible de charger le catalogue"
+				description="Une erreur est survenue lors de la récupération des collections depuis le serveur."
+				btnLabel="Réessayer"
+				btnIcon="lucide:rotate-cw"
+				:action="refresh"
 			/>
 
-			<div v-else class="flex flex-col gap-8 mt-6">
-				<CatalogPagination
-					v-if="totalPages > 1"
-					v-model:page="currentPage"
-					:total-pages="totalPages"
-					@change="handlePageChange"
-					class="-mb-8"
+			<template v-else>
+				<CatalogEmpty
+					v-if="filteredCategories.length === 0"
+					:on-reset="handleResetFilters"
 				/>
 
-				<div class="flex flex-col gap-8">
-					<CatalogCategorySection
-						v-for="category in paginatedCategories"
-						:key="category.id"
-						:category="category"
+				<template v-else>
+					<div class="flex flex-col gap-10">
+						<CatalogCategorySection
+							v-for="category in paginatedCategories"
+							:key="category.id"
+							:category="category"
+						/>
+					</div>
+
+					<CatalogPagination
+						v-if="totalPages > 1"
+						v-model:page="currentPage"
+						:total-pages="totalPages"
+						@change="handlePageChange"
 					/>
-				</div>
-
-				<CatalogPagination
-					v-if="totalPages > 1"
-					v-model:page="currentPage"
-					:total-pages="totalPages"
-					@change="handlePageChange"
-				/>
-			</div>
-		</template>
+				</template>
+			</template>
+		</main>
 	</div>
 </template>
